@@ -1,48 +1,97 @@
-import React, { useState, useEffect } from 'react';
-import logo from './logo.svg';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
+import './index.css';
+import { AuthProvider } from './context/AuthContext';
+import { UIProvider } from './context/UIContext';
+import { ProtectedRoute } from './components/Auth/ProtectedRoute';
+import Sidebar from './components/Layout/Sidebar';
+import Header from './components/Layout/Header';
+import Dashboard from './pages/Dashboard';
+import IdeationBoard from './pages/IdeationBoard';
+import MediaManager from './pages/MediaManager';
+import Campaigns from './pages/Campaigns';
+import Reports from './pages/Reports';
+import Settings from './pages/Settings';
+import Help from './pages/Help';
+import Login from './pages/Login';
+import NotFound from './pages/NotFound';
 
 // PUBLIC_INTERFACE
 function App() {
-  const [theme, setTheme] = useState('light');
-
-  // Effect to apply theme to document element
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
-
-  // PUBLIC_INTERFACE
-  const toggleTheme = () => {
-    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
-  };
-
+  /** Root app configures providers and routes. Includes ProtectedRoute for RBAC and auth. */
   return (
-    <div className="App">
-      <header className="App-header">
-        <button 
-          className="theme-toggle" 
-          onClick={toggleTheme}
-          aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-        >
-          {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
-        </button>
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <p>
-          Current theme: <strong>{theme}</strong>
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <AuthProvider>
+      <UIProvider>
+        <Router>
+          <div className="app-shell">
+            <Sidebar />
+            <div className="app-main">
+              <Header />
+              <main className="app-content" role="main" aria-live="polite">
+                <Routes>
+                  <Route path="/" element={<Navigate to="/home" replace />} />
+                  <Route
+                    path="/home"
+                    element={
+                      <ProtectedRoute roles={['viewer','editor','admin']}>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/ideation"
+                    element={
+                      <ProtectedRoute roles={['editor','admin']}>
+                        <IdeationBoard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/media"
+                    element={
+                      <ProtectedRoute roles={['editor','admin']}>
+                        <MediaManager />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/campaigns"
+                    element={
+                      <ProtectedRoute roles={['editor','admin']}>
+                        <Campaigns />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/reports"
+                    element={
+                      <ProtectedRoute roles={['viewer','editor','admin']}>
+                        <Reports />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/settings"
+                    element={
+                      <ProtectedRoute roles={['admin','editor','viewer']}>
+                        <Settings />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route path="/help" element={<Help />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </main>
+              <footer className="app-footer" aria-label="Footer">
+                <span>© {new Date().getFullYear()} Blu Creative Suite</span>
+              </footer>
+            </div>
+          </div>
+        </Router>
+      </UIProvider>
+    </AuthProvider>
   );
 }
 
