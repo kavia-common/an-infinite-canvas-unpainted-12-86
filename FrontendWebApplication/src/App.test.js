@@ -1,8 +1,13 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import App from './App';
 import { MemoryRouter } from 'react-router-dom';
 
-test('renders help page by default redirect to login for protected routes', () => {
+beforeEach(() => {
+  // ensure no previous auth persisted
+  window.localStorage.clear();
+});
+
+test('renders help page content when visiting /help', () => {
   render(
     <MemoryRouter initialEntries={['/help']}>
       <App />
@@ -20,4 +25,16 @@ test('login page renders', () => {
   );
   const signIn = screen.getByText(/Sign in/i);
   expect(signIn).toBeInTheDocument();
+});
+
+test('unauthenticated user visiting /home is redirected to login', async () => {
+  render(
+    <MemoryRouter initialEntries={['/home']}>
+      <App />
+    </MemoryRouter>
+  );
+  // ProtectedRoute should navigate to /login
+  await waitFor(() => {
+    expect(screen.getByText(/Sign in/i)).toBeInTheDocument();
+  });
 });
